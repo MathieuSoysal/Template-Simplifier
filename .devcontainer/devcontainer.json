@@ -2,5 +2,14 @@
   "image": "mcr.microsoft.com/devcontainers/universal:2",
   "features": {
   },
-  "forwardPorts": [5005]
+"forwardPorts": [
+	5005
+],
+"customizations": {
+	"vscode": {
+		"extensions": [
+			"vscjava.vscode-java-pack"
+		]
+	}
+}
 }
