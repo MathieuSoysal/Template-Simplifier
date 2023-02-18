@@ -18,7 +18,10 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"vscjava.vscode-java-pack"
+				"vscjava.vscode-java-pack",
+				"GitHub.copilot-labs",
+				"GitHub.copilot",
+				"MichaelCurrin.auto-commit-msg"
 			]
 		}
 	}
