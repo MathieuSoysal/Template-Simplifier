@@ -1,15 +1,44 @@
 package io.github.mathieusoysal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
+
+import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.kohsuke.github.GHContent;
+import org.kohsuke.github.GHRepository;
 
+import io.github.mathieusoysal.exceptions.ConfigFileNotFoundException;
+import io.quarkiverse.githubapp.testing.GitHubAppTest;
+import io.quarkus.test.junit.QuarkusTest;
+
+@QuarkusTest
+@GitHubAppTest
+@ExtendWith(MockitoExtension.class)
 public class DescriptionExctractorTest {
+
+	private GHRepository mockGHRepo;
+	private GHContent mockGHContent;
 
 	@Test
 	void test_getDescription() throws IOException {
@@ -47,6 +76,37 @@ public class DescriptionExctractorTest {
 		var descriptions = new DescriptionExctractor(fileReader);
 
 		assertEquals(descriptions.getDescription("Test1"), "This is test1\n");
+	}
+
+	@Test
+	void test_getDescription_withGitHubRepo() throws FileNotFoundException, IOException, ConfigFileNotFoundException {
+		setupMock();
+		when(mockGHContent.getName()).thenReturn(".template-guider.md");
+		when(mockGHContent.isFile()).thenReturn(true);
+		when(mockGHContent.read()).thenReturn(new FileInputStream("src/test/resources/.test-template-guidor.md"));
+
+		var description = new DescriptionExctractor(mockGHRepo);
+
+		assertEquals("This is test1\n", description.getDescription("Test1"));
+		assertEquals("This is test2", description.getDescription("Test2"));
+		verify(mockGHRepo, times(1)).getDirectoryContent(eq(""));
+		verify(mockGHContent, times(1)).read();
+	}
+
+	@Test
+	void test_getDescription_withGitHubRepoAndConfigFileNotFound()
+			throws IOException, ConfigFileNotFoundException {
+		setupMock();
+		when(mockGHContent.isFile()).thenReturn(false);
+
+		assertThrows(ConfigFileNotFoundException.class, () -> new DescriptionExctractor(mockGHRepo));
+	}
+
+	private void setupMock() throws FileNotFoundException, IOException {
+		mockGHContent = mock(GHContent.class);
+
+		mockGHRepo = mock(GHRepository.class);
+		when(mockGHRepo.getDirectoryContent(any())).thenReturn(Arrays.asList(mockGHContent));
 	}
 
 }
