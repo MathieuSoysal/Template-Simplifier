@@ -1,10 +1,13 @@
 package io.github.mathieusoysal;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.kohsuke.github.GHContent;
 
@@ -35,18 +38,23 @@ public class UserCustomization {
 	}
 
 	public void addMatch(GHContent content, Integer... lines) {
+		addMatch(content, Arrays.asList(lines));
+	}
+
+	private void addMatch(GHContent content, List<Integer> lines) {
 		this.matches.compute(content, (k, v) -> {
 			if (v == null) {
-				return Arrays.asList(lines);
+				return lines;
 			} else {
-				v.addAll(Arrays.asList(lines));
-				return v;
+				return Stream.of(v, lines)
+						.flatMap(Collection::stream)
+						.collect(Collectors.toList());
 			}
 		});
 	}
 
 	public void combine(UserCustomization other) {
-		this.matches.putAll(other.matches);
+		other.matches.forEach((k, v) -> addMatch(k, v));
 	}
 
 	public Map<GHContent, List<Integer>> getMatches() {
