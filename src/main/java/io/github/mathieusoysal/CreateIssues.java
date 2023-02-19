@@ -77,7 +77,7 @@ public class CreateIssues {
 		return files;
 	}
 
-	private List<UserCustomization> getUserCustomizationsFromManyFiles(List<GHContent> files) {
+	static List<UserCustomization> getUserCustomizationsFromManyFiles(List<GHContent> files) {
 		Map<UserCustomization, UserCustomization> userCustomizations = new HashMap<UserCustomization, UserCustomization>();
 		files.parallelStream()
 				.map((file) -> {
@@ -109,7 +109,7 @@ public class CreateIssues {
 	 *         file
 	 * @throws IOException
 	 */
-	private List<UserCustomization> getUserCustomizationsFromSingleFile(GHContent file) throws IOException {
+	static List<UserCustomization> getUserCustomizationsFromSingleFile(GHContent file) throws IOException {
 		var Usercustomizations = new ArrayList<UserCustomization>();
 		InputStreamReader isr = new InputStreamReader(file.read(),
 				StandardCharsets.UTF_8);

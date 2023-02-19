@@ -2,31 +2,26 @@ package io.github.mathieusoysal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
-
-import static io.quarkiverse.githubapp.testing.GitHubAppTesting.given;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.kohsuke.github.GHContent;
 import org.kohsuke.github.GHRepository;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import io.github.mathieusoysal.exceptions.ConfigFileNotFoundException;
 import io.quarkiverse.githubapp.testing.GitHubAppTest;
@@ -106,7 +101,7 @@ public class DescriptionExctractorTest {
 		mockGHContent = mock(GHContent.class);
 
 		mockGHRepo = mock(GHRepository.class);
-		when(mockGHRepo.getDirectoryContent(any())).thenReturn(Arrays.asList(mockGHContent));
+		when(mockGHRepo.getDirectoryContent(any())).thenAnswer((s)-> Arrays.asList(mockGHContent));
 	}
 
 }
