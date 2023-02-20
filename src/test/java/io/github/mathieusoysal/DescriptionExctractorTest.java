@@ -66,8 +66,8 @@ public class DescriptionExctractorTest {
 
 	@Test
 	void test_getDescription_withFile() throws IOException {
-		// take the file .test-template-guidor.md
-		FileReader fileReader = new FileReader("src/test/resources/.test-template-guidor.md");
+		// take the file .template-guider.md
+		FileReader fileReader = new FileReader("src/test/resources/.template-guider.md");
 		var descriptions = new DescriptionExctractor(fileReader);
 
 		assertEquals(descriptions.getDescription("Test1"), "This is test1\n");
@@ -78,7 +78,7 @@ public class DescriptionExctractorTest {
 		setupMock();
 		when(mockGHContent.getName()).thenReturn(".template-guider.md");
 		when(mockGHContent.isFile()).thenReturn(true);
-		when(mockGHContent.read()).thenReturn(new FileInputStream("src/test/resources/.test-template-guidor.md"));
+		when(mockGHContent.read()).thenReturn(new FileInputStream("src/test/resources/.template-guider.md"));
 
 		var description = new DescriptionExctractor(mockGHRepo);
 

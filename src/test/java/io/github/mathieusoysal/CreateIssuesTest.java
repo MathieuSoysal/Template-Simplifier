@@ -2,6 +2,7 @@ package io.github.mathieusoysal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -19,14 +20,91 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.kohsuke.github.GHContent;
+import org.kohsuke.github.GHEvent;
+import org.kohsuke.github.GHIssueBuilder;
 import org.kohsuke.github.GHRepository;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import io.quarkiverse.githubapp.testing.GitHubAppTest;
+import io.quarkiverse.githubapp.testing.GitHubAppTesting;
+import io.quarkiverse.githubapp.testing.dsl.GitHubMockSetupContext;
+import io.quarkus.test.junit.QuarkusTest;
+
+@QuarkusTest
+@GitHubAppTest
 @ExtendWith(MockitoExtension.class)
 public class CreateIssuesTest {
 
 	private GHRepository mockGHRepo;
 	private GHContent mockGHContent;
+	private GHIssueBuilder mockGHIssueBuilder;
+
+	private void setupMock() {
+		mockGHRepo = mock(GHRepository.class);
+		mockGHContent = mock(GHContent.class);
+	}
+
+	private void setupMockForEvent(GitHubMockSetupContext mocks, String repository) {
+		mockGHRepo = mocks.repository(repository);
+		mockGHContent = mock(GHContent.class);
+		mockGHIssueBuilder = mock(GHIssueBuilder.class);
+		when(mockGHRepo.createIssue(any())).thenReturn(mockGHIssueBuilder);
+		when(mockGHIssueBuilder.label(any())).thenReturn(mockGHIssueBuilder);
+		when(mockGHIssueBuilder.body(any())).thenReturn(mockGHIssueBuilder);
+	}
+
+	@Test
+	void test_onCreate_withEmptyFolder() throws RuntimeException, IOException {
+		GitHubAppTesting.given().github((mocks) -> {
+			setupMockForEvent(mocks, "MathieuSoysal/testtestss");
+		}).when()
+				.payloadFromClasspath("/repo-created.json")
+				.event(GHEvent.REPOSITORY)
+				.then().github(mocks -> {
+					Mockito.verify(mockGHRepo).createIssue("Hello from my GitHub App");
+					ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
+					ArgumentCaptor<String> labelCaptor = ArgumentCaptor.forClass(String.class);
+					Mockito.verify(mockGHIssueBuilder).body(bodyCaptor.capture());
+					Mockito.verify(mockGHIssueBuilder).label(labelCaptor.capture());
+					assertEquals(
+							"Config file not found. Please create a .template-guider.md file in the root of your repository.",
+							bodyCaptor.getValue());
+					assertEquals("Init project", labelCaptor.getValue());
+				});
+	}
+
+	@Test
+	void test_onCreate_withNotEmptyFolder() throws RuntimeException, IOException {
+		GitHubAppTesting.given().github((mocks) -> {
+			setupMockForEvent(mocks, "MathieuSoysal/testtestss");
+			when(mockGHContent.read()).thenReturn(new FileInputStream("src/test/resources/.template-guider.md"));
+			when(mockGHContent.isFile()).thenReturn(true);
+			when(mockGHContent.getName()).thenReturn(".template-guider.md");
+			var mockGHContent2 = mock(GHContent.class);
+			when(mockGHContent2.isFile()).thenReturn(true);
+			when(mockGHContent2.read()).thenReturn(new FileInputStream("src/test/resources/exempleWithUserCustom.txt"));
+			when(mockGHRepo.getDirectoryContent("")).thenReturn(Arrays.asList(mockGHContent, mockGHContent2));
+		}).when()
+				.payloadFromClasspath("/repo-created.json")
+				.event(GHEvent.REPOSITORY)
+				.then().github(mocks -> {
+					Mockito.verify(mockGHRepo).createIssue("Hello from my GitHub App");
+					ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
+					ArgumentCaptor<String> labelCaptor = ArgumentCaptor.forClass(String.class);
+					Mockito.verify(mockGHIssueBuilder).body(bodyCaptor.capture());
+					Mockito.verify(mockGHIssueBuilder).label(labelCaptor.capture());
+					assertEquals(
+							"""
+									## TEST44
+									null
+									### Links:
+									null#L1""",
+							bodyCaptor.getValue());
+					assertEquals("Init project", labelCaptor.getValue());
+				});
+	}
 
 	@Nested
 	@DisplayName("tests for getUserCustomizationsFromSingleFile")
@@ -100,11 +178,6 @@ public class CreateIssuesTest {
 
 		verify(mockGHContent, times(1)).read();
 		assertEquals(1, userCustomizations.size());
-	}
-
-	private void setupMock() {
-		mockGHRepo = mock(GHRepository.class);
-		mockGHContent = mock(GHContent.class);
 	}
 
 }
